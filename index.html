@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DuukaList+ Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0c10;
+  --bg2: #111318;
+  --bg3: #1a1d24;
+  --bg4: #21252f;
+  --border: #2a2d36;
+  --border2: #353840;
+  --text: #e8eaf0;
+  --text2: #9ba3b8;
+  --text3: #6b7385;
+  --orange: #ff6a00;
+  --orange-d: #cc5500;
+  --orange-glow: rgba(255,106,0,.2);
+  --green: #00d084;
+  --green-d: #00a068;
+  --red: #ff4444;
+  --yellow: #ffbb00;
+  --blue: #4a9eff;
+  --purple: #a78bfa;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Sora', sans-serif;
+  --nav-w: 220px;
+  --topbar-h: 56px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Login Screen ── */
+#loginScreen {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+}
+.login-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px;
+  width: 360px;
+  text-align: center;
+}
+.login-logo {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--orange);
+  margin-bottom: 4px;
+}
+.login-sub { color: var(--text3); font-size: 12px; margin-bottom: 32px; letter-spacing: .1em; text-transform: uppercase; }
+.login-card input {
+  width: 100%; padding: 12px 16px;
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: 8px; color: var(--text);
+  font-family: var(--mono); font-size: 14px;
+  outline: none; margin-bottom: 12px;
+  transition: border-color .15s;
+}
+.login-card input:focus { border-color: var(--orange); }
+.login-btn {
+  width: 100%; padding: 12px;
+  background: var(--orange); color: #fff;
+  border: none; border-radius: 8px;
+  font-family: var(--sans); font-weight: 700; font-size: 14px;
+  cursor: pointer; transition: background .15s;
+}
+.login-btn:hover { background: var(--orange-d); }
+.login-error { color: var(--red); font-size: 12px; margin-top: 10px; }
+
+/* ── Sidebar ── */
+.sidebar {
+  width: var(--nav-w);
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+.sidebar-logo {
+  padding: 20px 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-logo-text {
+  font-family: var(--mono); font-weight: 700; font-size: 18px; color: var(--orange);
+}
+.sidebar-logo-sub { font-size: 10px; color: var(--text3); letter-spacing: .12em; text-transform: uppercase; margin-top: 2px; }
+.nav-section { padding: 16px 8px 4px; }
+.nav-section-label { font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--text3); padding: 0 8px; margin-bottom: 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; border-radius: 8px;
+  font-size: 13px; font-weight: 500; color: var(--text2);
+  cursor: pointer; transition: all .15s;
+  margin-bottom: 2px;
+}
+.nav-item:hover { background: var(--bg3); color: var(--text); }
+.nav-item.active { background: var(--orange-glow); color: var(--orange); }
+.nav-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto; background: var(--red);
+  color: #fff; font-size: 10px; font-weight: 700;
+  padding: 2px 6px; border-radius: 100px;
+}
+.sidebar-footer {
+  margin-top: auto; padding: 12px 8px;
+  border-top: 1px solid var(--border);
+}
+.admin-tag {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: 8px;
+  background: var(--bg3);
+}
+.admin-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.admin-name { font-size: 12px; font-weight: 600; color: var(--text); }
+.admin-role { font-size: 10px; color: var(--text3); }
+
+/* ── Main Area ── */
+.main {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+}
+.topbar {
+  height: var(--topbar-h);
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 24px; gap: 16px;
+  flex-shrink: 0;
+}
+.topbar-title { font-weight: 700; font-size: 16px; color: var(--text); }
+.topbar-search {
+  flex: 1; max-width: 320px;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 0 12px; height: 34px;
+  margin-left: 16px;
+}
+.topbar-search input {
+  background: none; border: none; outline: none;
+  font-family: var(--sans); font-size: 13px; color: var(--text);
+  flex: 1;
+}
+.topbar-search input::placeholder { color: var(--text3); }
+.topbar-actions { display: flex; gap: 8px; margin-left: auto; }
+.topbar-btn {
+  padding: 6px 14px; border-radius: 6px; font-size: 12px;
+  font-weight: 600; cursor: pointer; border: 1px solid var(--border);
+  background: var(--bg3); color: var(--text2); font-family: var(--sans);
+  transition: all .15s;
+}
+.topbar-btn:hover { border-color: var(--orange); color: var(--orange); }
+.topbar-btn.primary { background: var(--orange); color: #fff; border-color: var(--orange); }
+.topbar-btn.primary:hover { background: var(--orange-d); }
+
+/* ── Content ── */
+.content {
+  flex: 1; overflow-y: auto; padding: 24px;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.content::-webkit-scrollbar { width: 4px; }
+.content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── Stats Grid ── */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px 20px;
+  position: relative; overflow: hidden;
+  transition: border-color .2s;
+}
+.stat-card:hover { border-color: var(--border2); }
+.stat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.stat-card.orange::before { background: var(--orange); }
+.stat-card.green::before { background: var(--green); }
+.stat-card.blue::before { background: var(--blue); }
+.stat-card.purple::before { background: var(--purple); }
+.stat-card.yellow::before { background: var(--yellow); }
+.stat-card.red::before { background: var(--red); }
+.stat-icon { font-size: 22px; margin-bottom: 10px; }
+.stat-label { font-size: 11px; color: var(--text3); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px; }
+.stat-value { font-family: var(--mono); font-size: 26px; font-weight: 700; color: var(--text); line-height: 1; }
+.stat-sub { font-size: 11px; color: var(--text3); margin-top: 5px; }
+.stat-delta { font-size: 11px; font-weight: 600; }
+.stat-delta.up { color: var(--green); }
+.stat-delta.dn { color: var(--red); }
+
+/* ── Section Header ── */
+.section-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.section-actions { display: flex; gap: 8px; }
+
+/* ── Table ── */
+.table-wrap {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; margin-bottom: 24px;
+}
+.table-filters {
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+}
+.filter-input {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 12px;
+  font-size: 12px; color: var(--text); font-family: var(--sans);
+  outline: none; transition: border-color .15s;
+}
+.filter-input:focus { border-color: var(--orange); }
+.filter-select {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 10px;
+  font-size: 12px; color: var(--text); font-family: var(--sans);
+  outline: none; cursor: pointer;
+}
+table { width: 100%; border-collapse: collapse; }
+thead tr { background: var(--bg3); }
+th {
+  padding: 10px 16px; text-align: left;
+  font-size: 10px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--text3);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+td {
+  padding: 11px 16px; font-size: 13px; color: var(--text2);
+  border-bottom: 1px solid var(--border);
+  max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg3); color: var(--text); }
+.td-main { color: var(--text) !important; font-weight: 600; }
+.td-mono { font-family: var(--mono); font-size: 11px; }
+.td-actions { display: flex; gap: 6px; }
+.tbl-btn {
+  padding: 4px 10px; border-radius: 5px; font-size: 11px;
+  font-weight: 600; cursor: pointer; border: 1px solid var(--border);
+  background: var(--bg4); color: var(--text2); font-family: var(--sans);
+  white-space: nowrap; transition: all .15s;
+}
+.tbl-btn:hover { border-color: var(--orange); color: var(--orange); }
+.tbl-btn.danger:hover { border-color: var(--red); color: var(--red); }
+.tbl-btn.success:hover { border-color: var(--green); color: var(--green); }
+
+/* ── Badges/Pills ── */
+.pill {
+  display: inline-block; padding: 2px 8px; border-radius: 100px;
+  font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+}
+.pill-green { background: rgba(0,208,132,.12); color: var(--green); }
+.pill-red { background: rgba(255,68,68,.12); color: var(--red); }
+.pill-orange { background: rgba(255,106,0,.12); color: var(--orange); }
+.pill-blue { background: rgba(74,158,255,.12); color: var(--blue); }
+.pill-yellow { background: rgba(255,187,0,.12); color: var(--yellow); }
+.pill-gray { background: var(--bg3); color: var(--text3); }
+
+/* ── Cards / Panels ── */
+.panel {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; margin-bottom: 20px;
+}
+.panel-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+/* ── Form ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 11px; font-weight: 700; color: var(--text3); letter-spacing: .06em; text-transform: uppercase; }
+.field input, .field select, .field textarea {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 9px 12px;
+  font-family: var(--sans); font-size: 13px; color: var(--text);
+  outline: none; transition: border-color .15s; width: 100%;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--orange); }
+.field textarea { resize: vertical; min-height: 80px; }
+.form-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+
+/* ── Notification builder ── */
+.notif-builder { display: grid; grid-template-columns: 1fr 280px; gap: 20px; }
+.notif-preview {
+  background: #1c1c1e; border-radius: 16px; padding: 20px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.notif-phone {
+  background: #2c2c2e; border-radius: 12px; padding: 14px;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.notif-phone-icon { font-size: 24px; }
+.notif-phone-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+.notif-phone-body { font-size: 12px; color: rgba(255,255,255,.65); }
+
+/* ── Spinner ── */
+.spinner {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 2px solid var(--border); border-top-color: var(--orange);
+  animation: spin .6s linear infinite; margin: 40px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Empty ── */
+.empty { text-align: center; padding: 48px 24px; color: var(--text3); }
+.empty-icon { font-size: 40px; margin-bottom: 12px; opacity: .5; }
+.empty-text { font-size: 14px; font-weight: 600; }
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.7);
+  backdrop-filter: blur(4px); z-index: 900;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px; width: 480px; max-width: 95vw;
+  max-height: 85vh; overflow-y: auto;
+  transform: translateY(12px); transition: transform .2s;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+.modal-close { cursor: pointer; color: var(--text3); font-size: 20px; line-height: 1; }
+.modal-close:hover { color: var(--text); }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 20px; right: 20px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 18px;
+  font-size: 13px; font-weight: 600; z-index: 9999;
+  transform: translateY(20px); opacity: 0;
+  transition: all .25s; pointer-events: none;
+  max-width: 300px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-color: var(--green); color: var(--green); }
+.toast.error { border-color: var(--red); color: var(--red); }
+
+/* ── Loading skeleton ── */
+.skel { background: linear-gradient(90deg, var(--bg3) 25%, var(--bg4) 50%, var(--bg3) 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
+@keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+
+/* ── Revenue chart ── */
+.chart-bar-wrap { display: flex; align-items: flex-end; gap: 4px; height: 80px; }
+.chart-bar { flex: 1; background: var(--orange); border-radius: 3px 3px 0 0; min-height: 4px; opacity: .8; transition: opacity .15s; cursor: pointer; }
+.chart-bar:hover { opacity: 1; }
+
+/* ── Settings toggle ── */
+.toggle { position: relative; display: inline-block; width: 40px; height: 22px; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; inset: 0; background: var(--bg4);
+  border-radius: 100px; cursor: pointer; transition: .2s;
+  border: 1px solid var(--border);
+}
+.toggle-slider::before {
+  content: ''; position: absolute;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--text3); top: 2px; left: 2px; transition: .2s;
+}
+.toggle input:checked + .toggle-slider { background: var(--orange); border-color: var(--orange); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(18px); background: #fff; }
+
+/* Responsive */
+@media(max-width: 768px) {
+  .sidebar { display: none; }
+  .form-grid { grid-template-columns: 1fr; }
+  .notif-builder { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">DuukaList+</div>
+    <div class="login-sub">Admin Console</div>
+    <input type="password" id="loginToken" placeholder="Enter admin token" autocomplete="off">
+    <input type="text" id="adminUrl" placeholder="Admin worker URL (optional)" value="">
+    <button class="login-btn" onclick="doLogin()">Access Console</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-text">DuukaList+</div>
+    <div class="sidebar-logo-sub">Admin Console</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Overview</div>
+    <div class="nav-item active" onclick="showPage('dashboard')"><span class="nav-icon">📊</span> Dashboard</div>
+    <div class="nav-item" onclick="showPage('revenue')"><span class="nav-icon">💰</span> Revenue</div>
+    <div class="nav-item" onclick="showPage('activity')"><span class="nav-icon">📋</span> Activity Log</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Marketplace</div>
+    <div class="nav-item" onclick="showPage('users')"><span class="nav-icon">👥</span> Users</div>
+    <div class="nav-item" onclick="showPage('listings')"><span class="nav-icon">📦</span> Listings</div>
+    <div class="nav-item" onclick="showPage('gigs')"><span class="nav-icon">🎯</span> Gigs</div>
+    <div class="nav-item" onclick="showPage('orders')"><span class="nav-icon">🛒</span> Orders</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Content</div>
+    <div class="nav-item" onclick="showPage('banners')"><span class="nav-icon">🖼️</span> Banners</div>
+    <div class="nav-item" onclick="showPage('spotduuka')"><span class="nav-icon">🎬</span> SpotDuuka</div>
+    <div class="nav-item" onclick="showPage('notifications')"><span class="nav-icon">🔔</span> Push Notifications</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">System</div>
+    <div class="nav-item" onclick="showPage('settings')"><span class="nav-icon">⚙️</span> Platform Settings</div>
+    <div class="nav-item" onclick="showPage('kvstats')"><span class="nav-icon">🗄️</span> KV Storage</div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="admin-tag">
+      <div class="admin-dot"></div>
+      <div>
+        <div class="admin-name">Admin</div>
+        <div class="admin-role">Super Admin</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Main Area -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbarTitle">Dashboard</div>
+    <div class="topbar-search">
+      <span style="color:var(--text3);font-size:14px">🔍</span>
+      <input type="text" id="globalSearch" placeholder="Search users, listings…" onkeydown="if(event.key==='Enter')doGlobalSearch()">
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" onclick="refreshPage()">↻ Refresh</button>
+      <button class="topbar-btn primary" onclick="showPage('notifications')">📢 Broadcast</button>
+      <button class="topbar-btn" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="content" id="content">
+    <div class="spinner"></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="modalTitle">Modal<span class="modal-close" onclick="closeModal()">✕</span></div>
+    <div id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────
+let ADMIN_URL = localStorage.getItem('duuka_admin_url') || 'https://duuka-admin.kerosoftz522.workers.dev';
+let ADMIN_TOKEN = localStorage.getItem('duuka_admin_token') || '';
+let currentPage = 'dashboard';
+let currentPageParams = {};
+
+// ── Auth ──────────────────────────────────────────────────────
+async function doLogin() {
+  const token = document.getElementById('loginToken').value.trim();
+  const url = document.getElementById('adminUrl').value.trim();
+  if (!token) { document.getElementById('loginError').textContent = 'Enter your admin token'; return; }
+  if (url) ADMIN_URL = url;
+
+  document.getElementById('loginError').textContent = 'Verifying…';
+  try {
+    const res = await api('GET', '/admin/stats');
+    if (res.success) {
+      ADMIN_TOKEN = token;
+      localStorage.setItem('duuka_admin_token', token);
+      localStorage.setItem('duuka_admin_url', ADMIN_URL);
+      document.getElementById('loginScreen').style.display = 'none';
+      showPage('dashboard');
+    } else {
+      document.getElementById('loginError').textContent = 'Invalid token or worker URL';
+    }
+  } catch (e) {
+    document.getElementById('loginError').textContent = 'Connection failed: ' + e.message;
+  }
+}
+
+function logout() {
+  localStorage.removeItem('duuka_admin_token');
+  location.reload();
+}
+
+// ── API ───────────────────────────────────────────────────────
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'X-Admin-Token': ADMIN_TOKEN, 'Content-Type': 'application/json' },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(ADMIN_URL + path, opts);
+  return res.json();
+}
+
+// ── Router ────────────────────────────────────────────────────
+const pages = {
+  dashboard: renderDashboard,
+  revenue: renderRevenue,
+  activity: renderActivity,
+  users: renderUsers,
+  listings: renderListings,
+  gigs: renderGigs,
+  orders: renderOrders,
+  banners: renderBanners,
+  spotduuka: renderSpotDuuka,
+  notifications: renderNotifications,
+  settings: renderSettings,
+  kvstats: renderKVStats,
+};
+
+const pageTitles = {
+  dashboard: 'Dashboard', revenue: 'Revenue & Analytics', activity: 'Activity Log',
+  users: 'User Management', listings: 'Listings', gigs: 'Gigs',
+  orders: 'Orders', banners: 'Homepage Banners', spotduuka: 'SpotDuuka Videos',
+  notifications: 'Push Notifications', settings: 'Platform Settings', kvstats: 'KV Storage',
+};
+
+function showPage(page, params = {}) {
+  currentPage = page;
+  currentPageParams = params;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector(`[onclick="showPage('${page}')"]`)?.classList.add('active');
+  document.getElementById('topbarTitle').textContent = pageTitles[page] || page;
+  document.getElementById('content').innerHTML = '<div class="spinner"></div>';
+  pages[page]?.(params);
+}
+
+function refreshPage() { showPage(currentPage, currentPageParams); }
+
+// ── Helpers ───────────────────────────────────────────────────
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function openModal(title, body, footer = '') {
+  document.getElementById('modalTitle').innerHTML = title + '<span class="modal-close" onclick="closeModal()">✕</span>';
+  document.getElementById('modalBody').innerHTML = body;
+  document.getElementById('modalFooter').innerHTML = footer;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function fmtNum(n) { return Number(n || 0).toLocaleString(); }
+function fmtUGX(n) { return 'UGX ' + fmtNum(n); }
+function fmtDate(ts) { return ts ? new Date(ts).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '—'; }
+function fmtTime(ts) { return ts ? new Date(ts).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '—'; }
+function statusPill(s) {
+  const map = { active:'green', sold:'blue', expired:'red', completed:'green', pending:'yellow', cancelled:'red', suspended:'red', free:'gray', pro:'orange', business:'purple' };
+  return `<span class="pill pill-${map[s]||'gray'}">${s||'—'}</span>`;
+}
+
+// ── Dashboard ─────────────────────────────────────────────────
+async function renderDashboard() {
+  try {
+    const [statsRes, revenueRes] = await Promise.all([
+      api('GET', '/admin/stats'),
+      api('GET', '/admin/revenue?days=30'),
+    ]);
+    const s = statsRes.stats || {};
+    const r = revenueRes.revenue || {};
+
+    document.getElementById('content').innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-card orange">
+          <div class="stat-icon">👥</div>
+          <div class="stat-label">Total Users</div>
+          <div class="stat-value">${fmtNum(s.users?.total)}</div>
+          <div class="stat-sub">Registered accounts</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">📦</div>
+          <div class="stat-label">Listings</div>
+          <div class="stat-value">${fmtNum(s.listings?.total)}</div>
+          <div class="stat-sub">Active + inactive</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">🛒</div>
+          <div class="stat-label">Orders</div>
+          <div class="stat-value">${fmtNum(s.orders?.total)}</div>
+          <div class="stat-sub">All time</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-label">Gigs</div>
+          <div class="stat-value">${fmtNum(s.gigs?.total)}</div>
+          <div class="stat-sub">Active services</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-icon">💰</div>
+          <div class="stat-label">Revenue (30d)</div>
+          <div class="stat-value">${fmtNum(Math.round((r.total_revenue||0)/1000))}K</div>
+          <div class="stat-sub">${fmtUGX(r.total_revenue || 0)}</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">📊</div>
+          <div class="stat-label">GMV (30d)</div>
+          <div class="stat-value">${fmtNum(Math.round((r.total_gmv||0)/1000))}K</div>
+          <div class="stat-sub">${fmtNum(r.order_count||0)} completed orders</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+        <div class="panel">
+          <div class="panel-title">📈 Revenue Chart (30 days)</div>
+          <div class="chart-bar-wrap" id="revenueChart"></div>
+          <div style="font-size:11px;color:var(--text3);margin-top:8px">Hover bars for daily revenue</div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">⚡ Quick Actions</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="topbar-btn" onclick="showPage('users')" style="width:100%;text-align:left">👥 Manage Users</button>
+            <button class="topbar-btn" onclick="showPage('listings')" style="width:100%;text-align:left">📦 Review Listings</button>
+            <button class="topbar-btn" onclick="showPage('orders')" style="width:100%;text-align:left">🛒 View Orders</button>
+            <button class="topbar-btn primary" onclick="showPage('notifications')" style="width:100%;text-align:left">📢 Send Broadcast</button>
+            <button class="topbar-btn" onclick="showPage('banners')" style="width:100%;text-align:left">🖼️ Update Banners</button>
+            <button class="topbar-btn" onclick="showPage('settings')" style="width:100%;text-align:left">⚙️ Platform Settings</button>
+          </div>
+        </div>
+      </div>`;
+
+    // Render revenue chart
+    const byDay = r.by_day || {};
+    const days = Object.keys(byDay).sort();
+    const vals = days.map(d => byDay[d]);
+    const maxVal = Math.max(...vals, 1);
+    const chart = document.getElementById('revenueChart');
+    if (chart && days.length) {
+      chart.innerHTML = days.map((d, i) => {
+        const h = Math.max(4, Math.round((vals[i] / maxVal) * 76));
+        return `<div class="chart-bar" style="height:${h}px" title="${d}: ${fmtUGX(vals[i])}"></div>`;
+      }).join('');
+    }
+  } catch (e) {
+    document.getElementById('content').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Failed to load: ${e.message}</div></div>`;
+  }
+}
+
+// ── Revenue ───────────────────────────────────────────────────
+async function renderRevenue(params = {}) {
+  const days = params.days || 30;
+  try {
+    const res = await api('GET', `/admin/revenue?days=${days}`);
+    const r = res.revenue || {};
+    document.getElementById('content').innerHTML = `
+      <div style="display:flex;gap:8px;margin-bottom:20px">
+        ${[7,30,90].map(d => `<button class="topbar-btn${days===d?' primary':''}" onclick="showPage('revenue',{days:${d}})">${d}d</button>`).join('')}
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card yellow"><div class="stat-icon">💰</div><div class="stat-label">Platform Revenue</div><div class="stat-value">${fmtNum(Math.round((r.total_revenue||0)/1000))}K</div><div class="stat-sub">${fmtUGX(r.total_revenue||0)}</div></div>
+        <div class="stat-card green"><div class="stat-icon">📊</div><div class="stat-label">Total GMV</div><div class="stat-value">${fmtNum(Math.round((r.total_gmv||0)/1000))}K</div><div class="stat-sub">${fmtUGX(r.total_gmv||0)}</div></div>
+        <div class="stat-card blue"><div class="stat-icon">🛒</div><div class="stat-label">Completed Orders</div><div class="stat-value">${fmtNum(r.order_count||0)}</div><div class="stat-sub">${r.pending_count||0} pending</div></div>
+        <div class="stat-card orange"><div class="stat-icon">📦</div><div class="stat-label">Avg Order Value</div><div class="stat-value">${fmtNum(Math.round((r.avg_order_value||0)/1000))}K</div><div class="stat-sub">${fmtUGX(r.avg_order_value||0)}</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">📈 Daily Revenue Breakdown</div>
+        <div class="chart-bar-wrap" id="revChart" style="height:120px"></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:8px">Last ${days} days · Hover for details</div>
+      </div>`;
+
+    const byDay = r.by_day || {};
+    const sortedDays = Object.keys(byDay).sort();
+    const vals = sortedDays.map(d => byDay[d]);
+    const maxVal = Math.max(...vals, 1);
+    const chart = document.getElementById('revChart');
+    if (chart && sortedDays.length) {
+      chart.innerHTML = sortedDays.map((d, i) => {
+        const h = Math.max(4, Math.round((vals[i] / maxVal) * 116));
+        return `<div class="chart-bar" style="height:${h}px;background:var(--green)" title="${d}: ${fmtUGX(vals[i])}"></div>`;
+      }).join('');
+    }
+  } catch (e) {
+    document.getElementById('content').innerHTML = `<div class="empty"><div class="empty-text">${e.message}</div></div>`;
+  }
+}
+
+// ── Users ─────────────────────────────────────────────────────
+async function renderUsers(params = {}) {
+  const q = params.q || '';
+  const tier = params.tier || '';
+  try {
+    const res = await api('GET', `/admin/users?limit=100${q?'&q='+encodeURIComponent(q):''}${tier?'&tier='+tier:''}`);
+    const users = res.users || [];
+    document.getElementById('content').innerHTML = `
+      <div class="table-wrap">
+        <div class="table-filters">
+          <input class="filter-input" placeholder="Search name / email / store…" value="${q}" id="userSearch" onkeydown="if(event.key==='Enter')showPage('users',{q:this.value})">
+          <select class="filter-select" onchange="showPage('users',{tier:this.value})">
+            <option value="">All Tiers</option>
+            <option value="free"${tier==='free'?' selected':''}>Free</option>
+            <option value="pro"${tier==='pro'?' selected':''}>Pro</option>
+            <option value="business"${tier==='business'?' selected':''}>Business</option>
+          </select>
+          <span style="margin-left:auto;font-size:12px;color:var(--text3)">${users.length} users</span>
+        </div>
+        <table>
+          <thead><tr>
+            <th>User</th><th>Email</th><th>Store</th><th>Tier</th><th>Level</th><th>Joined</th><th>Status</th><th>Actions</th>
+          </tr></thead>
+          <tbody>
+            ${users.length ? users.map(u => `
+              <tr>
+                <td class="td-main">${u.name || '—'}</td>
+                <td class="td-mono">${u.email || '—'}</td>
+                <td>${u.store_name || '—'}</td>
+                <td>${statusPill(u.subscription_tier||'free')}</td>
+                <td>${statusPill(u.seller_level||'new')}</td>
+                <td>${fmtDate(u.joined_at)}</td>
+                <td>${u.is_suspended ? '<span class="pill pill-red">SUSPENDED</span>' : '<span class="pill pill-green">ACTIVE</span>'}</td>
+                <td class="td-actions">
+                  <button class="tbl-btn" onclick="viewUser('${u.id}')">View</button>
+                  <button class="tbl-btn" onclick="editUser('${u.id}')">Edit</button>
+                  ${u.is_suspended
+                    ? `<button class="tbl-btn success" onclick="unsuspendUser('${u.id}')">Unsuspend</button>`
+                    : `<button class="tbl-btn danger" onclick="suspendUserModal('${u.id}','${(u.name||'').replace(/'/g,'')}')">Suspend</button>`}
+                </td>
+              </tr>`).join('') : '<tr><td colspan="8"><div class="empty"><div class="empty-text">No users found</div></div></td></tr>'}
+          </tbody>
+        </table>
+      </div>`;
+  } catch (e) {
+    document.getElementById('content').innerHTML = `<div class="empty"><div class="empty-text">${e.message}</div></div>`;
+  }
+}
+
+async function viewUser(id) {
+  const res = await api('GET', `/admin/users/${id}`);
+  const u = res.user || {};
+  openModal(`👤 ${u.name || 'User'}`, `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">
+      <div><span style="color:var(--text3)">ID</span><div class="td-mono" style="margin-top:3px">${u.id}</div></div>
+      <div><span style="color:var(--text3)">Email</span><div style="margin-top:3px">${u.email}</div></div>
+      <div><span style="color:var(--text3)">Store</span><div style="margin-top:3px">${u.store_name||'—'}</div></div>
+      <div><span style="color:var(--text3)">Business Type</span><div style="margin-top:3px">${u.business_type||'—'}</div></div>
+      <div><span style="color:var(--text3)">Subscription</span><div style="margin-top:3px">${statusPill(u.subscription_tier||'free')}</div></div>
+      <div><span style="color:var(--text3)">Seller Level</span><div style="margin-top:3px">${statusPill(u.seller_level||'new')}</div></div>
+      <div><span style="color:var(--text3)">Location</span><div style="margin-top:3px">${u.store_location||u.city||'—'}</div></div>
+      <div><span style="color:var(--text3)">Joined</span><div style="margin-top:3px">${fmtDate(u.joined_at)}</div></div>
+      <div><span style="color:var(--text3)">Last Login</span><div style="margin-top:3px">${fmtTime(u.last_login)}</div></div>
+      <div><span style="color:var(--text3)">Orders</span><div style="margin-top:3px">${u.orders_completed||0} completed</div></div>
+    </div>
+  `);
+}
+
+async function editUser(id) {
+  const res = await api('GET', `/admin/users/${id}`);
+  const u = res.user || {};
+  openModal(`✏️ Edit User: ${u.name}`, `
+    <div class="form-grid">
+      <div class="field"><label>Subscription Tier</label>
+        <select id="eu_tier">
+          <option value="free"${u.subscription_tier==='free'?' selected':''}>Free</option>
+          <option value="pro"${u.subscription_tier==='pro'?' selected':''}>Pro</option>
+          <option value="business"${u.subscription_tier==='business'?' selected':''}>Business</option>
+        </select>
+      </div>
+      <div class="field"><label>Seller Level</label>
+        <select id="eu_level">
+          <option value="new"${u.seller_level==='new'?' selected':''}>New</option>
+          <option value="level1"${u.seller_level==='level1'?' selected':''}>Level 1</option>
+          <option value="level2"${u.seller_level==='level2'?' selected':''}>Level 2</option>
+          <option value="top_rated"${u.seller_level==='top_rated'?' selected':''}>Top Rated</option>
+        </select>
+      </div>
+      <div class="field" style="grid-column:1/-1"><label>Admin Notes</label>
+        <textarea id="eu_notes">${u.admin_notes||''}</textarea>
+      </div>
+    </div>
+  `, `<button class="topbar-btn" onclick="closeModal()">Cancel</button>
+      <button class="topbar-btn primary" onclick="saveUser('${id}')">Save Changes</button>`);
+}
+
+async function saveUser(id) {
+  const body = {
+    subscription_tier: document.getElementById('eu_tier').value,
+    seller_level: document.getElementById('eu_level').value,
+    admin_notes: document.getElementById('eu_notes').value,
+  };
+  const res = await api('PUT', `/admin/users/${id}`, body);
+  if (res.success) { closeModal(); showToast('User updated', 'success'); refreshPage(); }
+  else showToast(res.error, 'error');
+}
+
+function suspendUserModal(id, name) {
+  openModal(`🚫 Suspend ${name}`, `
+    <p style="color:var(--text2);margin-bottom:16px;font-size:13px">Suspended users cannot post listings or make orders.</p>
+    <div class="field"><label>Reason</label><input id="suspendReason" placeholder="e.g. Spam, fake listings, fraud…"></div>
+  `, `<button class="topbar-btn" onclick="closeModal()">Cancel</button>
+      <button class="topbar-btn danger" style="background:var(--red);color:#fff;border-color:var(--red)" onclick="doSuspend('${id}')">Suspend User</button>`);
+}
+
+async function doSuspend(id) {
+  const reason = document.getElementById('suspendReason').value;
+  const res = await api('POST', `/admin/users/${id}/suspend`, { reason });
+  if (res.success) { closeModal(); showToast('User suspended', 'success'); refreshPage(); }
+  else showToast(res.error, 'error');
+}
+
+async function unsuspendUser(id) {
+  const res = await api('DELETE', `/admin/users/${id}/suspend`);
+  if (res.success) { showToast('User unsuspended', 'success'); refreshPage(); }
+  else showToast(res.error, 'error');
+}
+
+// ── Listings ──────────────────────────────────────────────────
+async function renderListings(params = {}) {
+  const q = params.q || '';
+  const status = params.status || '';
+  try {
+    const res = await api('GET', `/admin/listings?limit=100${q?'&q='+encodeURIComponent(q):''}${status?'&status='+status:''}`);
+    const listings = res.listings || [];
+    document.getElementById('content').innerHTML = `
+      <div class="table-wrap">
+        <div class="table-filters">
+          <input class="filter-input" placeholder="Search title…" value="${q}" onkeydown="if(event.key==='Enter')showPage('listings',{q:this.value})">
+          <select class="filter-select" onchange="showPage('listings',{status:this.value})">
+            <option value="">All Statuses</option>
+            <option value="active"${status==='active'?' selected':''}>Active</option>
+            <option value="sold"${status==='sold'?' selected':''}>Sold</option>
+            <option value="expired"${status==='expired'?' selected':''}>Expired</option>
+            <option value="suspended"${status==='suspended'?' selected':''}>Suspended</option>
+          </select>
+          <span style="margin-left:auto;font-size:12px;color:var(--text3)">${listings.length} listings</span>
+        </div>
+        <table>
+          <thead><tr><th>Title</th><th>Category</th><th>Price</th><th>Location</th><th>Boost</th><th>Status</th><th>Posted</th><th>Actions</th></tr></thead>
+          <tbody>
+            ${listings.length ? listings.map(l => `
+              <tr>
+                <td class="td-main">${l.title||'—'}</td>
+                <td>${l.category||'—'}</td>
+                <td>${l.price ? fmtUGX(l.price) : 'Negotiable'}</td>
+                <td>${(l.location||'—').split(',')[0]}</td>
+                <td>${l.boost_tier && l.boost_tier!=='none' ? statusPill(l.boost_tier) : '—'}</td>
+                <td>${statusPill(l.status||'active')}</td>
+                <td>${fmtDate(l.created_at)}</td>
+                <td class="td-actions">
+                  <button class="tbl-btn" onclick="editListing('${l.id}')">Edit</button>
+                  <button class="tbl-btn danger" onclick="deleteListing('${l.id}','${(l.title||'').replace(/'/g,'')}')">Delete</button>
+                </td>
+              </tr>`).join('') : '<tr><td colspan="8"><div class="empty"><div class="empty-text">No listings found</div></div></td></tr>'}
+          </tbody>
+        </table>
+      </div>`;
+  } catch (e) {
+    document.getElementById('content').innerHTML = `<div class="empty"><div class="empty-text">${e.message}</div></div>`;
+  }
+}
+
+async function editListing(id) {
+  const res = await api('GET', `/admin/listings/${id}`);
+  const l = res.listing || {};
+  openModal(`✏️ Edit Listing`, `
+    <div class="form-grid">
+      <div class="field"><label>Status</label>
+        <select id="el_status">
+          <option value="active"${l.status==='active'?' selected':''}>Active</option>
+          <option value="sold"${l.status==='sold'?' selected':''}>Sold</option>
+          <option value="expired"${l.status==='expired'?' selected':''}>Expired</option>
+          <option value="suspended"${l.status==='suspended'?' selected':''}>Suspended</option>
+        </select>
+      </div>
+      <div class="field"><label>Boost Tier</label>
+        <select id="el_boost">
+          <option value="none"${l.boost_tier==='none'?' selected':''}>None</option>
+          <option value="standard"${l.boost_tier==='standard'?' selected':''}>Standard</option>
+          <option value="top"${l.boost_tier==='top'?' selected':''}>TOP</option>
+          <option value="diamond"${l.boost_tier==='diamond'?' selected':''}>Diamond</option>
+        </select>
+      </div>
+      <div class="field" style="grid-column:1/-1"><label>Admin Notes / Flag Reason</label>
+        <textarea id="el_notes">${l.admin_notes||''}</textarea>
+      </div>
+    </div>
+  `, `<button class="topbar-btn" onclick="closeModal()">Cancel</button>
+      <button class="topbar-btn primary" onclick="saveListing('${id}')">Save</button>`);
+}
+
+async function saveListing(id) {
+  const body = {
+    status: document.getElementById('el_status').value,
+    boost_tier: document.getElementById('el_boost').value,
+    admin_notes: document.getElementById('el_notes').value,
+  };
+  const res = await api('PUT', `/admin/listings/${id}`, body);
+  if (res.success) { closeModal(); showToast('Listing updated', 'success'); refreshPage(); }
+  else showToast(res.error, 'error');
+}
+
+async function deleteListing(id, title) {
+  if (!confirm(`Delete listing "${title}"? This cannot be undone.`)) return;
+  const res = await api('DELETE', `/admin/listings/${id}`);
+  if (res.success) { showToast('Listing deleted', 'success'); refreshPage(); }
+  else showToast(res.error, 'error');
+}
+
+// ── Gigs ──────────────────────────────────────────────────────
+async function renderGigs() {
+  document.getElementById('content').innerHTML = `<div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">Gig management coming soon</div></div>`;
+}
+
+// ── Orders ────────────────────────────────────────────────────
+async function renderOrders(params = {}) {
+  const status = params.status || '';
+  try {
+    const res = await api('GET', `/admin/orders?limit=100${status?'&status='+status:''}`);
+    const orders = res.orders || [];
+    document.getElementById('content').innerHTML = `
+      <div class="table-wrap">
+        <div class="table-filters">
+          <select class="filter-select" onchange="showPage('orders',{status:this.value})">
+            <option value="">All Statuses</option>
+            <option value="pending"${status==='pending'?' selected':''}>Pending</option>
+            <option value="completed"${status==='completed'?' selected':''}>Completed</option>
+            <option value="cancelled"${status==='cancelled'?' selected':''}>Cancelled</option>
+          </select>
+          <span style="margin-left:auto;font-size:12px;color:var(--text3)">${orders.length} orders</span>
+        </div>
+        <table>
+          <thead><tr><th>Order ID</th><th>Buyer</th><th>Amount</th><th>Payment</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody>
+            ${orders.length ? orders.map(o => `
+              <tr>
+                <td class="td-mono">${o.id?.slice(-8).toUpperCase()}</td>
+                <td class="td-main">${o.buyer_name||o.buyer_id||'—'}</td>
+                <td>${fmtUGX(o.amount)}</td>
+                <td>${o.payment_method||'—'}</td>
+                <td>${statusPill(o.status||'pending')}</td>
+                <td>${fmtDate(o.created_at)}</td>
+                <td class="td-actions">
+                  <button class="tbl-btn" onclick="refundOrder('${o.id}')">Refund</button>
+                </td>
+              </tr>`).join('') : '<tr><td colspan="7"><div class="empty"><div class="empty-text">No orders found</div></div></td></tr>'}
+          </tbody>
+        </table>
+      </div>`;
+  } catch (e) {
+    document.getElementById('content').innerHTML = `<div class="empty"><div class="empty-text">${e.message}</div></div>`;
+  }
+}
+
+async function refundOrder(id) {
+  if (!confirm('Mark this order as refunded?')) return;
+  const res = await api('PUT', `/admin/orders/${id}`, { status: 'refunded', refunded: true });
+  if (res.success) { showToast('Order marked as refunded', 'success'); refreshPage(); }
+  else showToast(res.error, 'error');
+}
+
+// ── Banners ───────────────────────────────────────────────────
+async function renderBanners() {
+  const res = await api('GET', '/admin/banners');
+  const banners = res.banners || [];
+  document.getElementById('content').innerHTML = `
+    <div class="section-hd">
+      <div class="section-title">Homepage Banners</div>
+      <button class="topbar-btn primary" onclick="createBannerModal()">+ New Banner</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Title</th><th>Subtitle</th><th>CTA</th><th>Active</th><th>Expires</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${banners.length ? banners.map(b => `
+            <tr>
+              <td class="td-main">${b.title||'—'}</td>
+              <td>${b.subtitle||'—'}</td>
+              <td>${b.cta||'—'}</td>
+              <td>${b.active ? '<span class="pill pill-green">YES</span>' : '<span class="pill pill-gray">NO</span>'}</td>
+              <td>${b.expires_at ? fmtDate(b.expires_at) : 'Never'}</td>
+              <td><button class="tbl-btn danger" onclick="deleteBanner('${b.id}')">Delete</button></td>
+            </tr>`).join('') : '<tr><td colspan="6"><div class="empty"><div class="empty-text">No banners yet</div></div></td></tr>'}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function createBannerModal() {
+  openModal('🖼️ New Banner', `
+    <div class="form-grid">
+      <div class="field" style="grid-column:1/-1"><label>Title *</label><input id="bn_title" placeholder="Flash Sale — Up to 50% off"></div>
+      <div class="field" style="grid-column:1/-1"><label>Subtitle</label><input id="bn_sub" placeholder="Limited time offer"></div>
+      <div class="field"><label>CTA Text</label><input id="bn_cta" placeholder="Shop Now →"></div>
+      <div class="field"><label>Link / Route</label><input id="bn_link" placeholder="/browse?sort=newest"></div>
+      <div class="field"><label>Background Color</label><input id="bn_color" type="color" value="#0B2E6E" style="height:38px"></div>
+      <div class="field"><label>Expires (optional)</label><input id="bn_exp" type="date"></div>
+    </div>
+  `, `<button class="topbar-btn" onclick="closeModal()">Cancel</button>
+      <button class="topbar-btn primary" onclick="saveBanner()">Create Banner</button>`);
+}
+
+async function saveBanner() {
+  const exp = document.getElementById('bn_exp').value;
+  const body = {
+    title: document.getElementById('bn_title').value,
+    subtitle: document.getElementById('bn_sub').value,
+    cta: document.getElementById('bn_cta').value,
+    link: document.getElementById('bn_link').value,
+    bg_color: document.getElementById('bn_color').value,
+    expires_at: exp ? new Date(exp).getTime() : null,
+    active: true,
+  };
+  const res = await api('POST', '/admin/banners', body);
+  if (res.success) { closeModal(); showToast('Banner created', 'success'); renderBanners(); }
+  else showToast(res.error, 'error');
+}
+
+async function deleteBanner(id) {
+  if (!confirm('Delete this banner?')) return;
+  const res = await api('DELETE', `/admin/banners/${id}`);
+  if (res.success) { showToast('Banner deleted', 'success'); renderBanners(); }
+}
+
+// ── SpotDuuka ─────────────────────────────────────────────────
+async function renderSpotDuuka() {
+  document.getElementById('content').innerHTML = `<div class="empty"><div class="empty-icon">🎬</div><div class="empty-text">SpotDuuka moderation coming soon</div><div style="font-size:12px;color:var(--text3);margin-top:8px">Use User Management to handle creator accounts</div></div>`;
+}
+
+// ── Notifications ─────────────────────────────────────────────
+function renderNotifications() {
+  document.getElementById('content').innerHTML = `
+    <div class="notif-builder">
+      <div>
+        <div class="panel">
+          <div class="panel-title">📢 Send Push Notification</div>
+          <div class="field" style="margin-bottom:14px">
+            <label>Target</label>
+            <select id="notif_target" onchange="toggleNotifTarget()">
+              <option value="broadcast">📢 Broadcast to ALL users</option>
+              <option value="user">👤 Specific user</option>
+            </select>
+          </div>
+          <div class="field" id="notifUserField" style="display:none;margin-bottom:14px">
+            <label>User ID</label>
+            <input id="notif_user_id" placeholder="User ID (16 char hex)">
+          </div>
+          <div class="field" style="margin-bottom:14px">
+            <label>Title *</label>
+            <input id="notif_title" placeholder="New listings near you 🏷️" oninput="updatePreview()">
+          </div>
+          <div class="field" style="margin-bottom:14px">
+            <label>Message *</label>
+            <textarea id="notif_body" placeholder="Check out the latest deals in Kampala…" oninput="updatePreview()"></textarea>
+          </div>
+          <div class="form-grid" style="margin-bottom:14px">
+            <div class="field">
+              <label>Click Action (path)</label>
+              <input id="notif_path" placeholder="/browse">
+            </div>
+            <div class="field">
+              <label>Tag (optional)</label>
+              <input id="notif_tag" placeholder="promo-1">
+            </div>
+          </div>
+          <div class="form-actions" style="justify-content:flex-start">
+            <button class="topbar-btn primary" onclick="sendNotification()">🚀 Send Now</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <div class="panel-title">📱 Preview</div>
+          <div class="notif-preview">
+            <div style="font-size:11px;color:rgba(255,255,255,.4);text-align:center">Android Notification</div>
+            <div class="notif-phone">
+              <div class="notif-phone-icon">🏷️</div>
+              <div>
+                <div class="notif-phone-title" id="previewTitle">DuukaList+</div>
+                <div class="notif-phone-body" id="previewBody">Your notification message</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">📊 Quick Templates</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <button class="tbl-btn" onclick="fillTemplate('New listings!','Fresh items just posted in your area 🆕','/browse')">🆕 New Listings</button>
+            <button class="tbl-btn" onclick="fillTemplate('Flash Sale 🔥','Limited time deals — shop now before they\\'re gone!','/browse?sort=newest')">🔥 Flash Sale</button>
+            <button class="tbl-btn" onclick="fillTemplate('Boost your listing ⭐','Get 10x more views with a Featured boost','/dashboard')">⭐ Boost Promo</button>
+            <button class="tbl-btn" onclick="fillTemplate('New feature on DuukaList+ 🎉','SpotDuuka is live — share your products in short videos!','/spot')">🎬 Feature Launch</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleNotifTarget() {
+  const v = document.getElementById('notif_target').value;
+  document.getElementById('notifUserField').style.display = v === 'user' ? 'block' : 'none';
+}
+
+function updatePreview() {
+  document.getElementById('previewTitle').textContent = document.getElementById('notif_title').value || 'DuukaList+';
+  document.getElementById('previewBody').textContent = document.getElementById('notif_body').value || 'Your notification message';
+}
+
+function fillTemplate(title, body, path) {
+  document.getElementById('notif_title').value = title;
+  document.getElementById('notif_body').value = body;
+  document.getElementById('notif_path').value = path;
+  updatePreview();
+}
+
+async function sendNotification() {
+  const target = document.getElementById('notif_target').value;
+  const title = document.getElementById('notif_title').value.trim();
+  const body = document.getElementById('notif_body').value.trim();
+  if (!title || !body) { showToast('Title and message required', 'error'); return; }
+
+  const payload = {
+    title, message: body,
+    data: { path: document.getElementById('notif_path').value || '/', tag: document.getElementById('notif_tag').value },
+  };
+  if (target === 'broadcast') payload.broadcast = true;
+  else payload.user_id = document.getElementById('notif_user_id').value.trim();
+
+  const res = await api('POST', '/admin/notify', payload);
+  if (res.success) showToast(`Sent to ${res.sent || 1} device(s)`, 'success');
+  else showToast(res.error || 'Send failed', 'error');
+}
+
+// ── Settings ──────────────────────────────────────────────────
+async function renderSettings() {
+  const res = await api('GET', '/admin/settings');
+  const s = res.settings || {};
+  document.getElementById('content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="panel">
+        <div class="panel-title">⚙️ Platform Controls</div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-size:13px;font-weight:600">Maintenance Mode</div><div style="font-size:11px;color:var(--text3)">Blocks all API requests</div></div>
+            <label class="toggle"><input type="checkbox" id="s_maintenance" ${s.maintenance_mode?'checked':''}><span class="toggle-slider"></span></label>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-size:13px;font-weight:600">Announcement Banner</div><div style="font-size:11px;color:var(--text3)">Shows at top of app</div></div>
+            <label class="toggle"><input type="checkbox" id="s_announce" ${s.announcement_active?'checked':''}><span class="toggle-slider"></span></label>
+          </div>
+          <div class="field"><label>Announcement Text</label><input id="s_announce_text" value="${s.announcement_text||''}"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">💰 Pricing & Limits</div>
+        <div class="form-grid">
+          <div class="field"><label>Commission Rate (%)</label><input id="s_commission" type="number" value="${(s.commission_rate||0.03)*100}" step="0.1"></div>
+          <div class="field"><label>Free Tier Listing Limit</label><input id="s_free_limit" type="number" value="${s.listing_limit_free||5}"></div>
+          <div class="field"><label>Pro Tier Listing Limit</label><input id="s_pro_limit" type="number" value="${s.listing_limit_pro||50}"></div>
+          <div class="field"><label>Pro Subscription (UGX/mo)</label><input id="s_pro_price" type="number" value="${s.subscription_prices?.pro||20000}"></div>
+          <div class="field"><label>Standard Boost (UGX)</label><input id="s_boost_std" type="number" value="${s.boost_prices?.standard||5000}"></div>
+          <div class="field"><label>Diamond Boost (UGX)</label><input id="s_boost_dia" type="number" value="${s.boost_prices?.diamond||50000}"></div>
+        </div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="topbar-btn primary" onclick="saveSettings()">💾 Save All Settings</button>
+    </div>`;
+}
+
+async function saveSettings() {
+  const body = {
+    maintenance_mode: document.getElementById('s_maintenance').checked,
+    announcement_active: document.getElementById('s_announce').checked,
+    announcement_text: document.getElementById('s_announce_text').value,
+    commission_rate: parseFloat(document.getElementById('s_commission').value) / 100,
+    listing_limit_free: parseInt(document.getElementById('s_free_limit').value),
+    listing_limit_pro: parseInt(document.getElementById('s_pro_limit').value),
+    subscription_prices: { pro: parseInt(document.getElementById('s_pro_price').value) },
+    boost_prices: {
+      standard: parseInt(document.getElementById('s_boost_std').value),
+      diamond: parseInt(document.getElementById('s_boost_dia').value),
+    },
+  };
+  const res = await api('PUT', '/admin/settings', body);
+  if (res.success) showToast('Settings saved', 'success');
+  else showToast(res.error, 'error');
+}
+
+// ── Activity Log ──────────────────────────────────────────────
+async function renderActivity() {
+  const res = await api('GET', '/admin/activity?limit=100');
+  const log = res.log || [];
+  document.getElementById('content').innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Time</th><th>Action</th><th>Detail</th><th>Admin</th></tr></thead>
+        <tbody>
+          ${log.length ? log.map(l => `
+            <tr>
+              <td class="td-mono">${fmtTime(l.timestamp)}</td>
+              <td class="td-main">${l.action||'—'}</td>
+              <td>${l.detail||'—'}</td>
+              <td class="td-mono">${l.admin||'admin'}</td>
+            </tr>`).join('') : '<tr><td colspan="4"><div class="empty"><div class="empty-text">No activity yet</div></div></td></tr>'}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ── KV Stats ──────────────────────────────────────────────────
+async function renderKVStats() {
+  const res = await api('GET', '/admin/kv');
+  const kv = res.kv || {};
+  document.getElementById('content').innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card orange"><div class="stat-icon">👥</div><div class="stat-label">Users KV Keys</div><div class="stat-value">${kv.users_keys||0}</div></div>
+      <div class="stat-card green"><div class="stat-icon">📦</div><div class="stat-label">Listings KV Keys</div><div class="stat-value">${kv.listings_keys||0}</div></div>
+      <div class="stat-card blue"><div class="stat-icon">🎯</div><div class="stat-label">Gigs KV Keys</div><div class="stat-value">${kv.gigs_keys||0}</div></div>
+      <div class="stat-card purple"><div class="stat-icon">🛒</div><div class="stat-label">Orders KV Keys</div><div class="stat-value">${kv.orders_keys||0}</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">🗄️ Meta KV Keys</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${(kv.meta_keys||[]).map(k => `<span class="pill pill-blue" style="font-family:var(--mono);text-transform:none">${k}</span>`).join('')}
+      </div>
+    </div>`;
+}
+
+// ── Global Search ─────────────────────────────────────────────
+function doGlobalSearch() {
+  const q = document.getElementById('globalSearch').value.trim();
+  if (!q) return;
+  showPage('users', { q });
+}
+
+// ── Init ──────────────────────────────────────────────────────
+if (ADMIN_TOKEN) {
+  document.getElementById('loginScreen').style.display = 'none';
+  showPage('dashboard');
+}
+</script>
+</body>
+</html>
