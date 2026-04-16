@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DuukaList+ Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root {
   --bg: #0a0c10;
@@ -394,10 +395,12 @@ tr:hover td { background: var(--bg3); color: var(--text); }
   <div class="login-card">
     <div class="login-logo">DuukaList+</div>
     <div class="login-sub">Admin Console</div>
-    <input type="password" id="loginToken" placeholder="Enter admin token" autocomplete="off">
-    <input type="text" id="adminUrl" placeholder="Admin worker URL (optional)" value="">
-    <button class="login-btn" onclick="doLogin()">Access Console</button>
-    <div class="login-error" id="loginError"></div>
+    <div id="googleSignInBtn" style="display:flex;justify-content:center;margin:8px 0 4px"></div>
+    <div class="login-error" id="loginError" style="text-align:center"></div>
+    <div style="color:var(--text3);font-size:11px;text-align:center;margin-top:12px;line-height:1.5">
+      Sign in with an authorised Google account.<br>
+      Access is restricted to approved admins only.
+    </div>
   </div>
 </div>
 
@@ -434,14 +437,15 @@ tr:hover td { background: var(--bg3); color: var(--text); }
     <div class="nav-section-label">System</div>
     <div class="nav-item" onclick="showPage('settings')"><span class="nav-icon">⚙️</span> Platform Settings</div>
     <div class="nav-item" onclick="showPage('kvstats')"><span class="nav-icon">🗄️</span> KV Storage</div>
+    <div class="nav-item" id="whitelistNavItem" onclick="showPage('whitelist')"><span class="nav-icon">🔐</span> Access Control</div>
   </div>
 
   <div class="sidebar-footer">
     <div class="admin-tag">
-      <div class="admin-dot"></div>
-      <div>
-        <div class="admin-name">Admin</div>
-        <div class="admin-role">Super Admin</div>
+      <div id="adminAvatar" class="admin-dot" style="width:32px;height:32px;border-radius:50%;object-fit:cover;overflow:hidden;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0"></div>
+      <div style="min-width:0">
+        <div class="admin-name" id="adminName">Admin</div>
+        <div class="admin-role" id="adminRole">Loading…</div>
       </div>
     </div>
   </div>
@@ -481,37 +485,113 @@ tr:hover td { background: var(--bg3); color: var(--text); }
 
 <script>
 // ── Config ────────────────────────────────────────────────────
-let ADMIN_URL = localStorage.getItem('duuka_admin_url') || 'https://duuka-admin.kerosoftz522.workers.dev';
-let ADMIN_TOKEN = localStorage.getItem('duuka_admin_token') || '';
+const ADMIN_URL = 'https://duuka-admin.kerosoftz522.workers.dev';
+const GOOGLE_CLIENT_ID = '103731782063-skp1gui990cb64rvtmresjfkmvne4n3a.apps.googleusercontent.com';
+
+let ADMIN_ID_TOKEN = localStorage.getItem('duuka_admin_id_token') || '';
+let adminProfile = JSON.parse(localStorage.getItem('duuka_admin_profile') || 'null');
 let currentPage = 'dashboard';
 let currentPageParams = {};
 
-// ── Auth ──────────────────────────────────────────────────────
-async function doLogin() {
-  const token = document.getElementById('loginToken').value.trim();
-  const url = document.getElementById('adminUrl').value.trim();
-  if (!token) { document.getElementById('loginError').textContent = 'Enter your admin token'; return; }
-  if (url) ADMIN_URL = url;
+// ── Google One Tap Auth ───────────────────────────────────────
+window.onGoogleLibraryLoad = function() {
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleSignIn,
+    auto_select: true,           // auto-sign-in if only one account
+    cancel_on_tap_outside: false,
+  });
+  // Render the sign-in button
+  const btnEl = document.getElementById('googleSignInBtn');
+  if (btnEl) {
+    google.accounts.id.renderButton(btnEl, {
+      theme: 'filled_black',
+      size: 'large',
+      text: 'signin_with',
+      shape: 'pill',
+      width: 260,
+    });
+  }
+  // Also trigger One Tap prompt
+  google.accounts.id.prompt((notification) => {
+    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+      // Prompt not shown — button is still there
+    }
+  });
 
+  // Auto-restore if we have a stored token
+  if (ADMIN_ID_TOKEN && adminProfile) {
+    verifyAndEnter(ADMIN_ID_TOKEN);
+  }
+};
+
+async function handleGoogleSignIn(response) {
+  const idToken = response.credential;
   document.getElementById('loginError').textContent = 'Verifying…';
+  await verifyAndEnter(idToken);
+}
+
+async function verifyAndEnter(idToken) {
   try {
-    const res = await api('GET', '/admin/stats');
-    if (res.success) {
-      ADMIN_TOKEN = token;
-      localStorage.setItem('duuka_admin_token', token);
-      localStorage.setItem('duuka_admin_url', ADMIN_URL);
-      document.getElementById('loginScreen').style.display = 'none';
-      showPage('dashboard');
+    const res = await fetch(ADMIN_URL + '/admin/me', {
+      headers: { 'Authorization': `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+    });
+    const data = await res.json();
+    if (res.ok && data.success && data.admin) {
+      ADMIN_ID_TOKEN = idToken;
+      adminProfile = data.admin;
+      localStorage.setItem('duuka_admin_id_token', idToken);
+      localStorage.setItem('duuka_admin_profile', JSON.stringify(adminProfile));
+      enterConsole();
     } else {
-      document.getElementById('loginError').textContent = 'Invalid token or worker URL';
+      document.getElementById('loginError').textContent =
+        '⛔ Access denied. Your Google account is not authorised.';
+      localStorage.removeItem('duuka_admin_id_token');
+      localStorage.removeItem('duuka_admin_profile');
     }
   } catch (e) {
-    document.getElementById('loginError').textContent = 'Connection failed: ' + e.message;
+    document.getElementById('loginError').textContent = 'Connection error: ' + e.message;
   }
 }
 
+function enterConsole() {
+  document.getElementById('loginScreen').style.display = 'none';
+  // Update sidebar profile
+  const nameEl = document.getElementById('adminName');
+  const roleEl = document.getElementById('adminRole');
+  const avEl = document.getElementById('adminAvatar');
+  if (nameEl) nameEl.textContent = adminProfile?.name || adminProfile?.email || 'Admin';
+  if (roleEl) roleEl.textContent = adminProfile?.role === 'super_admin' ? '⭐ Super Admin' : '👤 Admin';
+  if (avEl) {
+    if (adminProfile?.picture) {
+      avEl.innerHTML = `<img src="${adminProfile.picture}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    } else {
+      avEl.textContent = (adminProfile?.name || 'A')[0].toUpperCase();
+    }
+  }
+  showPage('dashboard');
+}
+
+async function addAdminDialog() {
+  const email = prompt('Enter Google email address to whitelist:');
+  if (!email || !email.includes('@')) { if (email !== null) alert('Invalid email'); return; }
+  const name = prompt('Display name for this admin (optional):', email.split('@')[0]);
+  const res = await api('POST', '/admin/whitelist', { email: email.trim(), name: name || email });
+  if (res.success) { showToast('✅ ' + email + ' added to whitelist'); showPage('whitelist'); }
+  else showToast('❌ ' + (res.error || 'Failed'));
+}
+
+async function removeAdmin(email) {
+  if (!confirm('Remove ' + email + ' from admin whitelist?')) return;
+  const res = await api('DELETE', '/admin/whitelist', { email });
+  if (res.success) { showToast('Removed ' + email); showPage('whitelist'); }
+  else showToast('❌ ' + (res.error || 'Failed'));
+}
+
 function logout() {
-  localStorage.removeItem('duuka_admin_token');
+  google.accounts.id.disableAutoSelect();
+  localStorage.removeItem('duuka_admin_id_token');
+  localStorage.removeItem('duuka_admin_profile');
   location.reload();
 }
 
@@ -519,10 +599,17 @@ function logout() {
 async function api(method, path, body) {
   const opts = {
     method,
-    headers: { 'X-Admin-Token': ADMIN_TOKEN, 'Content-Type': 'application/json' },
+    headers: { 'Authorization': `Bearer ${ADMIN_ID_TOKEN}`, 'Content-Type': 'application/json' },
   };
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(ADMIN_URL + path, opts);
+  if (res.status === 401) {
+    // Token expired — force re-login
+    localStorage.removeItem('duuka_admin_id_token');
+    localStorage.removeItem('duuka_admin_profile');
+    location.reload();
+    return { success: false, error: 'Session expired' };
+  }
   return res.json();
 }
 
@@ -540,13 +627,14 @@ const pages = {
   notifications: renderNotifications,
   settings: renderSettings,
   kvstats: renderKVStats,
+  whitelist: renderWhitelist,
 };
 
 const pageTitles = {
   dashboard: 'Dashboard', revenue: 'Revenue & Analytics', activity: 'Activity Log',
   users: 'User Management', listings: 'Listings', gigs: 'Gigs',
   orders: 'Orders', banners: 'Homepage Banners', spotduuka: 'SpotDuuka Videos',
-  notifications: 'Push Notifications', settings: 'Platform Settings', kvstats: 'KV Storage',
+  notifications: 'Push Notifications', settings: 'Platform Settings', kvstats: 'KV Storage', whitelist: '🔐 Access Control',
 };
 
 function showPage(page, params = {}) {
@@ -1234,6 +1322,38 @@ async function renderActivity() {
 }
 
 // ── KV Stats ──────────────────────────────────────────────────
+async function renderWhitelist() {
+  const isSuperAdmin = adminProfile?.role === 'super_admin';
+  const d = await api('GET', '/admin/whitelist');
+  const list = (d.whitelist || []);
+  const superList = ['kabugokelly25@gmail.com','kerosoftz522@gmail.com','keromisec9@gmail.com','keromisec@gmail.com'];
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <div class="section-header">
+      <h2 class="section-title">🔐 Access Control</h2>
+      ${isSuperAdmin ? '<button class="btn-primary" onclick="addAdminDialog()">+ Add Admin</button>' : ''}
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-weight:700;margin-bottom:12px;font-size:13px;color:var(--text3);letter-spacing:.08em">⭐ SUPER ADMINS — permanent</div>
+      ${superList.map(e => `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0">${e[0].toUpperCase()}</div>
+        <div><div style="font-weight:600">${e}</div><div style="font-size:11px;color:var(--text3)">Super Admin · Permanent access</div></div>
+      </div>`).join('')}
+    </div>
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:12px;font-size:13px;color:var(--text3);letter-spacing:.08em">👤 WHITELISTED ADMINS (${list.length})</div>
+      ${list.length === 0 ? '<div style="color:var(--text3);text-align:center;padding:24px 0">No whitelisted admins yet.<br><small>Use "+ Add Admin" to grant access to another email.</small></div>' : ''}
+      ${list.map(e => `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">${(e.email||'A')[0].toUpperCase()}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600">${e.name || e.email}</div>
+          <div style="font-size:11px;color:var(--text3)">${e.email} · Added by ${e.added_by || 'admin'}</div>
+        </div>
+        ${isSuperAdmin ? `<button onclick="removeAdmin('${e.email}')" style="background:#ef44441a;color:#ef4444;border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-weight:600">Remove</button>` : ''}
+      </div>`).join('')}
+    </div>`;
+}
+
 async function renderKVStats() {
   const res = await api('GET', '/admin/kv');
   const kv = res.kv || {};
