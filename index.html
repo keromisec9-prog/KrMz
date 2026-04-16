@@ -1380,7 +1380,7 @@ function doGlobalSearch() {
 }
 
 // ── Init ──────────────────────────────────────────────────────
-if (ADMIN_TOKEN) {
+if (ADMIN_ID_TOKEN && adminProfile) {
   document.getElementById('loginScreen').style.display = 'none';
   showPage('dashboard');
 }
