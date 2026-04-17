@@ -386,7 +386,7 @@ tr:hover td { background: var(--bg3); color: var(--text); }
   .notif-builder { grid-template-columns: 1fr; }
 }
 </style>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://accounts.google.com/gsi/client"></script>
 </head>
 <body>
 
@@ -486,7 +486,7 @@ let currentPage = 'dashboard';
 let currentPageParams = {};
 
 // ── Google Sign-In ────────────────────────────────────────────
-window.onload = function() {
+function initGoogle() {
   google.accounts.id.initialize({
     client_id: '103731782063-skp1gui990cb64rvtmresjfkmvne4n3a.apps.googleusercontent.com',
     callback: handleGoogleSignIn,
@@ -496,9 +496,18 @@ window.onload = function() {
     document.getElementById('g_signin_btn'),
     { theme: 'outline', size: 'large', text: 'signin_with', width: 240 }
   );
-  // Auto-login if token saved
   if (GOOGLE_ID_TOKEN) attemptLogin(GOOGLE_ID_TOKEN);
-};
+}
+
+function waitForGoogle() {
+  if (typeof google !== 'undefined' && google.accounts) {
+    initGoogle();
+  } else {
+    setTimeout(waitForGoogle, 100);
+  }
+}
+
+window.onload = waitForGoogle;
 
 async function handleGoogleSignIn(response) {
   GOOGLE_ID_TOKEN = response.credential;
@@ -1286,9 +1295,9 @@ function doGlobalSearch() {
 }
 
 // ── Init ──────────────────────────────────────────────────────
-if (ADMIN_TOKEN) {
-  document.getElementById('loginScreen').style.display = 'none';
-  showPage('dashboard');
+if (GOOGLE_ID_TOKEN) {
+  // Token exists in localStorage — attemptLogin will verify it
+  // loginScreen stays visible until server confirms; window.onload handles it
 }
 </script>
 </body>
