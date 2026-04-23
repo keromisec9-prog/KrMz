@@ -430,6 +430,11 @@ tr:hover td { background: var(--bg3); color: var(--text); }
   </div>
 
   <div class="nav-section">
+    <div class="nav-section-label">DuukaExpress</div>
+    <div class="nav-item" onclick="showPage('expressRiders')"><span class="nav-icon">🚀</span> Riders & Fleets</div>
+  </div>
+
+  <div class="nav-section">
     <div class="nav-section-label">System</div>
     <div class="nav-item" onclick="showPage('settings')"><span class="nav-icon">⚙️</span> Platform Settings</div>
     <div class="nav-item" onclick="showPage('kvstats')"><span class="nav-icon">🗄️</span> KV Storage</div>
@@ -575,6 +580,7 @@ const pages = {
   notifications: renderNotifications,
   settings: renderSettings,
   kvstats: renderKVStats,
+  expressRiders: renderExpressRiders,
 };
 
 const pageTitles = {
@@ -582,6 +588,7 @@ const pageTitles = {
   users: 'User Management', listings: 'Listings', gigs: 'Gigs',
   orders: 'Orders', banners: 'Homepage Banners', spotduuka: 'SpotDuuka Videos',
   notifications: 'Push Notifications', settings: 'Platform Settings', kvstats: 'KV Storage',
+  expressRiders: '🚀 Express — Riders & Fleets',
 };
 
 function showPage(page, params = {}) {
@@ -1286,6 +1293,167 @@ async function renderKVStats() {
       </div>
     </div>`;
 }
+
+// ── Express Riders & Fleets ───────────────────────────────────
+let _exRiderFilter = 'pending';
+
+async function renderExpressRiders() {
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <div class="section-hd">
+      <div class="section-title">🚀 Riders & Fleets</div>
+      <div class="section-actions">
+        <button class="btn btn-sm" onclick="showPage('expressRiders')">↻ Refresh</button>
+      </div>
+    </div>
+
+    <!-- Filter tabs -->
+    <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
+      ${['pending','approved','rejected','all'].map(s=>`
+        <button class="btn btn-sm ${_exRiderFilter===s?'btn-primary':''}" 
+          onclick="_exRiderFilter='${s}';renderExpressRiders()" 
+          style="${_exRiderFilter===s?'background:var(--accent);color:#fff;':''}">
+          ${s==='pending'?'⏳':s==='approved'?'✅':s==='rejected'?'❌':'📋'} ${s.charAt(0).toUpperCase()+s.slice(1)}
+        </button>`).join('')}
+    </div>
+
+    <div id="exRidersTable"><div class="spinner"></div></div>`;
+
+  try {
+    const filter = _exRiderFilter === 'all' ? '' : `?status=${_exRiderFilter}`;
+    const res = await api('GET', `/admin/express/riders${filter}`);
+    const riders = res.riders || [];
+
+    if (!riders.length) {
+      document.getElementById('exRidersTable').innerHTML =
+        `<div style="text-align:center;padding:40px;color:var(--text3)">No ${_exRiderFilter} applications found.</div>`;
+      return;
+    }
+
+    document.getElementById('exRidersTable').innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Applicant</th>
+            <th>Vehicle</th>
+            <th>Plate</th>
+            <th>Area</th>
+            <th>Photos</th>
+            <th>Status</th>
+            <th>Submitted</th>
+            <th>Actions</th>
+          </tr></thead>
+          <tbody>
+            ${riders.map(r => `
+              <tr>
+                <td>
+                  <div style="font-weight:600;font-size:13px">${r.full_name||'—'}</div>
+                  <div style="font-size:11px;color:var(--text3)">${r.phone||''}</div>
+                  <div style="font-size:11px;color:var(--text3)">${r.national_id||''}</div>
+                </td>
+                <td>
+                  <div style="font-weight:600;text-transform:capitalize">${r.vehicle_type||'—'}</div>
+                  <div style="font-size:11px;color:var(--text3)">${r.vehicle_model||''} ${r.vehicle_color?'· '+r.vehicle_color:''}</div>
+                  <div style="font-size:11px;color:var(--text3)">${r.vehicle_year||''}</div>
+                </td>
+                <td><span style="font-family:var(--mono);font-size:12px;background:var(--bg2);padding:2px 7px;border-radius:6px">${r.plate_number||'—'}</span></td>
+                <td style="font-size:12px">${r.working_area||'—'}<br><span style="color:var(--text3)">${r.working_radius_km||10}km radius</span></td>
+                <td>
+                  ${(r.vehicle_photos||[]).length
+                    ? `<div style="display:flex;gap:4px;flex-wrap:wrap">
+                        ${(r.vehicle_photos||[]).map((src,i)=>`
+                          <img src="${src}" onclick="exAdminViewPhotos(${JSON.stringify(r.vehicle_photos||[]).replace(/"/g,'&quot;')},${i})"
+                            style="width:40px;height:40px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid var(--border)">`).join('')}
+                       </div>`
+                    : '<span style="color:var(--text3);font-size:11px">No photos</span>'}
+                </td>
+                <td>
+                  <span class="pill ${r.status==='approved'?'pill-green':r.status==='rejected'?'pill-red':'pill-yellow'}" style="font-size:11px">
+                    ${r.status==='approved'?'✅ Approved':r.status==='rejected'?'❌ Rejected':'⏳ Pending'}
+                  </span>
+                  ${r.rejection_reason ? `<div style="font-size:10px;color:var(--text3);margin-top:4px;max-width:120px">${r.rejection_reason}</div>` : ''}
+                  ${r.admin_notes ? `<div style="font-size:10px;color:var(--text3);margin-top:4px;max-width:120px;font-style:italic">${r.admin_notes}</div>` : ''}
+                </td>
+                <td style="font-size:11px;color:var(--text3)">${r.applied_at ? new Date(r.applied_at).toLocaleDateString() : '—'}</td>
+                <td>
+                  <div style="display:flex;flex-direction:column;gap:5px">
+                    ${r.status !== 'approved' ? `<button class="btn btn-sm" style="background:#16a34a;color:#fff;font-size:11px" onclick="exAdminAction('${r.id}','approve')">✅ Approve</button>` : ''}
+                    ${r.status !== 'pending' ? `<button class="btn btn-sm" style="background:#d97706;color:#fff;font-size:11px" onclick="exAdminAction('${r.id}','pending')">⏳ Pending</button>` : ''}
+                    ${r.status !== 'rejected' ? `<button class="btn btn-sm" style="background:#dc2626;color:#fff;font-size:11px" onclick="exAdminReject('${r.id}')">❌ Reject</button>` : ''}
+                    <button class="btn btn-sm" style="font-size:11px" onclick="exAdminAddNote('${r.id}','${(r.admin_notes||'').replace(/'/g,"\\'")}')">📝 Note</button>
+                  </div>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch(e) {
+    document.getElementById('exRidersTable').innerHTML =
+      `<div style="color:var(--red);padding:20px">Error loading riders: ${e.message}</div>`;
+  }
+}
+
+window.exAdminViewPhotos = (photos, startIdx) => {
+  openModal('Vehicle Photos',
+    `<div style="display:flex;flex-direction:column;gap:10px">
+      ${photos.map((src,i)=>`
+        <img src="${src}" style="width:100%;border-radius:8px;object-fit:contain;max-height:260px;background:#000">
+        <div style="text-align:center;font-size:11px;color:var(--text3)">Photo ${i+1} of ${photos.length}</div>`).join('')}
+    </div>`,
+    `<button class="btn btn-sm" onclick="closeModal()">Close</button>`
+  );
+};
+
+window.exAdminAction = async (riderId, action) => {
+  try {
+    await api('POST', `/admin/express/riders/${riderId}/action`, { action });
+    showToast(action === 'approve' ? '✅ Rider approved!' : '⏳ Marked as pending');
+    renderExpressRiders();
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+};
+
+window.exAdminReject = (riderId) => {
+  openModal('❌ Reject Application',
+    `<div class="field" style="margin-bottom:0">
+      <label style="font-weight:600">Reason for rejection <span style="color:var(--red)">*</span></label>
+      <textarea id="rejectReason" rows="4" placeholder="e.g. Blurry photos, incomplete information, vehicle doesn't meet requirements…" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:13px;font-family:inherit;resize:vertical"></textarea>
+    </div>`,
+    `<button class="btn btn-sm" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-sm" style="background:#dc2626;color:#fff" onclick="exAdminConfirmReject('${riderId}')">❌ Confirm Reject</button>`
+  );
+};
+
+window.exAdminConfirmReject = async (riderId) => {
+  const reason = document.getElementById('rejectReason')?.value.trim();
+  if (!reason) { showToast('Please enter a rejection reason', 'error'); return; }
+  try {
+    await api('POST', `/admin/express/riders/${riderId}/action`, { action: 'reject', rejection_reason: reason });
+    closeModal();
+    showToast('Application rejected.');
+    renderExpressRiders();
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+};
+
+window.exAdminAddNote = (riderId, existingNote) => {
+  openModal('📝 Admin Note',
+    `<div class="field" style="margin-bottom:0">
+      <label style="font-weight:600">Internal note (not shown to rider)</label>
+      <textarea id="adminNote" rows="4" placeholder="e.g. Called applicant, awaiting document resubmission…" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:13px;font-family:inherit;resize:vertical">${existingNote}</textarea>
+    </div>`,
+    `<button class="btn btn-sm" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-sm btn-primary" onclick="exAdminSaveNote('${riderId}')">💾 Save Note</button>`
+  );
+};
+
+window.exAdminSaveNote = async (riderId) => {
+  const note = document.getElementById('adminNote')?.value.trim();
+  try {
+    await api('POST', `/admin/express/riders/${riderId}/action`, { action: 'note', admin_notes: note });
+    closeModal();
+    showToast('Note saved ✓');
+    renderExpressRiders();
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+};
 
 // ── Global Search ─────────────────────────────────────────────
 function doGlobalSearch() {
