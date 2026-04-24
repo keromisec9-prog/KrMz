@@ -384,7 +384,38 @@ tr:hover td { background: var(--bg3); color: var(--text); }
   .sidebar { display: none; }
   .form-grid { grid-template-columns: 1fr; }
   .notif-builder { grid-template-columns: 1fr; }
+  .topbar { padding: 0 12px; gap: 8px; }
+  .topbar-search { display: none; }
+  .topbar-title { font-size: 13px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .content { padding: 12px; padding-bottom: 72px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .section-hd { flex-wrap: wrap; gap: 8px; }
+  table { font-size: 12px; }
+  table th, table td { padding: 8px 6px; }
+  /* Mobile bottom nav for admin */
+  #mobileAdminNav {
+    display: flex !important;
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
+    background: var(--bg2); border-top: 1px solid var(--border);
+    height: 58px;
+  }
 }
+@media(min-width: 769px) {
+  #mobileAdminNav { display: none !important; }
+}
+#mobileAdminNav {
+  display: none;
+  align-items: center; justify-content: space-around;
+}
+.mob-nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 2px; cursor: pointer;
+  font-size: 9px; font-weight: 600; color: var(--text3);
+  padding: 6px 4px; border: none; background: none; font-family: var(--sans);
+  transition: color .15s;
+}
+.mob-nav-item.active, .mob-nav-item:active { color: var(--orange); }
+.mob-nav-item span:first-child { font-size: 18px; line-height: 1; }
 </style>
 <script src="https://accounts.google.com/gsi/client"></script>
 </head>
@@ -471,6 +502,32 @@ tr:hover td { background: var(--bg3); color: var(--text); }
   </div>
 </div>
 
+<!-- Mobile Bottom Nav (hidden on desktop) -->
+<div id="mobileAdminNav">
+  <button class="mob-nav-item" onclick="showPage('dashboard')"><span>📊</span><span>Dashboard</span></button>
+  <button class="mob-nav-item" onclick="showPage('users')"><span>👥</span><span>Users</span></button>
+  <button class="mob-nav-item" onclick="showPage('listings')"><span>📦</span><span>Listings</span></button>
+  <button class="mob-nav-item" onclick="showPage('orders')"><span>🛒</span><span>Orders</span></button>
+  <button class="mob-nav-item" onclick="showPage('expressRiders')"><span>🚀</span><span>Riders</span></button>
+  <button class="mob-nav-item" onclick="showMobileMenu()"><span>⋯</span><span>More</span></button>
+</div>
+
+<!-- Mobile More Menu -->
+<div id="mobileMoreMenu" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7)" onclick="hideMobileMenu()">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:var(--bg2);border-radius:16px 16px 0 0;padding:16px 0 32px" onclick="event.stopPropagation()">
+    <div style="text-align:center;font-size:12px;font-weight:700;color:var(--text3);padding:0 0 12px;text-transform:uppercase;letter-spacing:.1em">More</div>
+    <div onclick="hideMobileMenu();showPage('revenue')" style="display:flex;align-items:center;gap:12px;padding:13px 20px;cursor:pointer;border-bottom:1px solid var(--border)"><span style="font-size:18px">💰</span><span style="font-size:14px;font-weight:600">Revenue</span></div>
+    <div onclick="hideMobileMenu();showPage('activity')" style="display:flex;align-items:center;gap:12px;padding:13px 20px;cursor:pointer;border-bottom:1px solid var(--border)"><span style="font-size:18px">📋</span><span style="font-size:14px;font-weight:600">Activity</span></div>
+    <div onclick="hideMobileMenu();showPage('gigs')" style="display:flex;align-items:center;gap:12px;padding:13px 20px;cursor:pointer;border-bottom:1px solid var(--border)"><span style="font-size:18px">🎯</span><span style="font-size:14px;font-weight:600">Gigs</span></div>
+    <div onclick="hideMobileMenu();showPage('banners')" style="display:flex;align-items:center;gap:12px;padding:13px 20px;cursor:pointer;border-bottom:1px solid var(--border)"><span style="font-size:18px">🖼️</span><span style="font-size:14px;font-weight:600">Banners</span></div>
+    <div onclick="hideMobileMenu();showPage('spotduuka')" style="display:flex;align-items:center;gap:12px;padding:13px 20px;cursor:pointer;border-bottom:1px solid var(--border)"><span style="font-size:18px">🎬</span><span style="font-size:14px;font-weight:600">SpotDuuka</span></div>
+    <div onclick="hideMobileMenu();showPage('notifications')" style="display:flex;align-items:center;gap:12px;padding:13px 20px;cursor:pointer;border-bottom:1px solid var(--border)"><span style="font-size:18px">🔔</span><span style="font-size:14px;font-weight:600">Notifications</span></div>
+    <div onclick="hideMobileMenu();showPage('settings')" style="display:flex;align-items:center;gap:12px;padding:13px 20px;cursor:pointer;border-bottom:1px solid var(--border)"><span style="font-size:18px">⚙️</span><span style="font-size:14px;font-weight:600">Settings</span></div>
+    <div onclick="hideMobileMenu();showPage('kvstats')" style="display:flex;align-items:center;gap:12px;padding:13px 20px;cursor:pointer;border-bottom:1px solid var(--border)"><span style="font-size:18px">🗄️</span><span style="font-size:14px;font-weight:600">KV Storage</span></div>
+    <div onclick="hideMobileMenu();logout()" style="display:flex;align-items:center;gap:12px;padding:13px 20px;cursor:pointer;color:var(--red)"><span style="font-size:18px">🚪</span><span style="font-size:14px;font-weight:600">Sign Out</span></div>
+  </div>
+</div>
+
 <!-- Modal -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
   <div class="modal" onclick="event.stopPropagation()">
@@ -486,6 +543,7 @@ tr:hover td { background: var(--bg3); color: var(--text); }
 <script>
 // ── Config ────────────────────────────────────────────────────
 let ADMIN_URL = localStorage.getItem('duuka_admin_url') || 'https://duuka-admin.kerosoftz522.workers.dev';
+const EX_API = 'https://duuka-express.kerosoftz522.workers.dev';
 let GOOGLE_ID_TOKEN = localStorage.getItem('duuka_admin_id_token') || '';
 let currentPage = 'dashboard';
 let currentPageParams = {};
@@ -566,6 +624,29 @@ async function api(method, path, body) {
   return res.json();
 }
 
+// Call the Express worker directly (it shares the same Google auth token)
+async function exApi(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Authorization': 'Bearer ' + GOOGLE_ID_TOKEN, 'Content-Type': 'application/json' },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(EX_API + path, opts);
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new Error(d.error || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+// ── Mobile nav helpers ────────────────────────────────────────
+function showMobileMenu() {
+  document.getElementById('mobileMoreMenu').style.display = 'block';
+}
+function hideMobileMenu() {
+  document.getElementById('mobileMoreMenu').style.display = 'none';
+}
+
 // ── Router ────────────────────────────────────────────────────
 const pages = {
   dashboard: renderDashboard,
@@ -598,6 +679,9 @@ function showPage(page, params = {}) {
   document.querySelector(`[onclick="showPage('${page}')"]`)?.classList.add('active');
   document.getElementById('topbarTitle').textContent = pageTitles[page] || page;
   document.getElementById('content').innerHTML = '<div class="spinner"></div>';
+  // Highlight mobile bottom nav
+  document.querySelectorAll('.mob-nav-item').forEach(b => b.classList.remove('active'));
+  document.querySelector(`#mobileAdminNav [onclick="showPage('${page}')"]`)?.classList.add('active');
   pages[page]?.(params);
 }
 
@@ -1321,7 +1405,7 @@ async function renderExpressRiders() {
 
   try {
     const filter = _exRiderFilter === 'all' ? '' : `?status=${_exRiderFilter}`;
-    const res = await api('GET', `/admin/express/riders${filter}`);
+    const res = await exApi('GET', `/admin/riders${filter}`);
     const riders = res.riders || [];
 
     if (!riders.length) {
@@ -1406,7 +1490,7 @@ window.exAdminViewPhotos = (photos, startIdx) => {
 
 window.exAdminAction = async (riderId, action) => {
   try {
-    await api('POST', `/admin/express/riders/${riderId}/action`, { action });
+    await exApi('POST', `/admin/riders/${riderId}/action`, { action });
     showToast(action === 'approve' ? '✅ Rider approved!' : '⏳ Marked as pending');
     renderExpressRiders();
   } catch(e) { showToast('Error: ' + e.message, 'error'); }
@@ -1427,7 +1511,7 @@ window.exAdminConfirmReject = async (riderId) => {
   const reason = document.getElementById('rejectReason')?.value.trim();
   if (!reason) { showToast('Please enter a rejection reason', 'error'); return; }
   try {
-    await api('POST', `/admin/express/riders/${riderId}/action`, { action: 'reject', rejection_reason: reason });
+    await exApi('POST', `/admin/riders/${riderId}/action`, { action: 'reject', rejection_reason: reason });
     closeModal();
     showToast('Application rejected.');
     renderExpressRiders();
@@ -1448,7 +1532,7 @@ window.exAdminAddNote = (riderId, existingNote) => {
 window.exAdminSaveNote = async (riderId) => {
   const note = document.getElementById('adminNote')?.value.trim();
   try {
-    await api('POST', `/admin/express/riders/${riderId}/action`, { action: 'note', admin_notes: note });
+    await exApi('POST', `/admin/riders/${riderId}/action`, { action: 'note', admin_notes: note });
     closeModal();
     showToast('Note saved ✓');
     renderExpressRiders();
