@@ -626,12 +626,13 @@ async function api(method, path, body) {
 
 // Call the Express worker directly (it shares the same Google auth token)
 async function exApi(method, path, body) {
+  // Route through admin worker which proxies to express worker with ADMIN_TOKEN
   const opts = {
     method,
     headers: { 'Authorization': 'Bearer ' + GOOGLE_ID_TOKEN, 'Content-Type': 'application/json' },
   };
   if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(EX_API + path, opts);
+  const res = await fetch(ADMIN_URL + '/admin/express' + path, opts);
   if (!res.ok) {
     const d = await res.json().catch(() => ({}));
     throw new Error(d.error || `HTTP ${res.status}`);
